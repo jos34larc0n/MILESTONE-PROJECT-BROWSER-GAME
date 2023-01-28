@@ -13,14 +13,14 @@ class Card {
   const actions = ['','','','','','','Draw 2','Reverse','Skip','Wild','Wild Draw 4']
   
   // create the number cards
-  for (let color of colors) {
+  function numberCards(){for (let color of colors) {
     for (let value of values) {
       for (let i = 0; i < 2; i++) {
           deck.push(new Card(color, value, ''));
       }
     }
   }
-  
+}
   // create the action cards
   for (let color of colors) {
       for (let act of actions) {
