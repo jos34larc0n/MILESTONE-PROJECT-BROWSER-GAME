@@ -1,12 +1,11 @@
 {
   "name": "milestone-project-browsergame",
   "version": "1.0.0",
-  "description": "\"\"",
+  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
-  }, 
-  "type": "module",
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jos34larc0n/MILESTONE-PROJECT-BROWSER-GAME.git"
