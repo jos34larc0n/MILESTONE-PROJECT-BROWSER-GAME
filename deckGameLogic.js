@@ -1,125 +1,97 @@
-// Define the Card class to represent each card in the deck
-class Card {
-    // Define a class for each card in the game
-    constructor(color, value, action) {
-      this.color = color; // store the color of the card
-      this.value = value; // store the value of the card
-      this.action = action; // store the action of the card
-    }
-  }
-   // Create the deck of cards
-   let deck = [];
-   let colors = ["red", "yellow", "green", "blue"];
-   let values = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "skip", "reverse", "draw two"];
-   let actions = ["none", "skip", "reverse", "draw two"];
- 
-   for (let i = 0; i < colors.length; i++) {
-     for (let j = 0; j < values.length; j++) {
-       let action = actions[j < 10 ? 0 : j - 9];
-       deck.push(new Card(colors[i], values[j], action));
-     }
-   }
+const unoGame = document.querySelector('.uno-game');
+const player1Hand = document.querySelector('.player-1-hand');
+const player2Hand = document.querySelector('.player-2-hand');
+const drawPile = document.querySelector('.draw-pile');
+const discardPile = document.querySelector('.discard-pile');
 
-  let currentPlayer = 1; // initialize the current player
-  let currentCard = deck[0]; // set the current card to the top of the deck
-  let drawPile = deck.slice(); // create a draw pile from the deck
-  let discardPile = []; // create an empty discard pile
-  let winner = null; // initialize the winner to null
+// Select the UNO game container and hands of the two players and the draw and discard piles
+
+const createCardElement = (color, number) => {
+  const cardElement = document.createElement('div');
+  cardElement.classList.add('card');
+  // Create the card element and add class 'card' to it
   
-  function isValidPlay(playerHand, cardToPlay) {
-    // function to check if a card is a valid play
-    if (cardToPlay.color === currentCard.color || 
-        cardToPlay.value === currentCard.value || 
-        cardToPlay.action === currentCard.action) {
-      // if the card is valid, return true
-      return true;
+  if (color) {
+    cardElement.classList.add(color);
+  }
+  // Add class for color if there's a color passed as argument
+  
+  cardElement.innerHTML = number;
+  // Set the card number as the content of the card element
+  
+  cardElement.addEventListener('click', () => {
+    discardPile.appendChild(cardElement);
+    player1Hand.removeChild(cardElement);
+  });
+  // Add a click event listener that appends the card to the discard pile and removes it from player 1's hand
+  
+  return cardElement;
+};
+
+// Function to create and return a card element
+
+const addCardsToHand = (hand, cards) => {
+  cards.forEach(card => hand.appendChild(createCardElement(card.color, card.number)));
+};
+
+// Function to add cards to a player's hand
+
+const initializeCards = () => {
+  const cards = [];
+  const colors = ['red', 'yellow', 'green', 'blue'];
+  // Array of card colors
+  
+  colors.forEach(color => {
+    for (let i = 0; i <= 9; i++) {
+      cards.push({ color, number: i });
     }
-    // if the card is not valid, return false
-    return false;
-  }
+    // Push all the numbered cards of each color
+    
+    cards.push({ color, number: 'Reverse' });
+    cards.push({ color, number: 'Skip' });
+    cards.push({ color, number: 'Draw Two' });
+    // Push the action cards for each color
+  });
   
-  function playerTurn(player, playerHand) {
-    // function for a player's turn
-    let validPlay = false; // initialize valid play to false
-    while (!validPlay) {
-      // continue looping until a valid play is made
-      let selectedCardIndex = prompt(`Player ${player}, select a card to play:`); // prompt the player to select a card
-      let selectedCard = playerHand[selectedCardIndex]; // get the selected card
-      if (isValidPlay(playerHand, selectedCard)) {
-        // if the selected card is a valid play
-        validPlay = true; // set valid play to true
-        playerHand.splice(selectedCardIndex, 1); // remove the card from the player's hand
-        discardPile.push(selectedCard); // add the card to the discard pile
-        currentCard = selectedCard; // set the current card to the selected card
-      } else {
-        // if the selected card is not a valid play
-        console.log("Invalid play, please select a different card."); // notify the player that their play is invalid
-      }
+  for (let i = 0; i < 4; i++) {
+    cards.push({ color: 'black', number: 'Wild' });
+    cards.push({ color: 'black', number: 'Wild Draw' });
+  }
+  // Push the wild and wild draw cards
+  
+  return cards;
+};
+
+// Function to initialize the cards and return them as an array
+
+const shuffleCards = (cards) => {
+  for (let i = cards.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cards[i], cards[j]] = [cards[j], cards[i]];
+  }
+  return cards;
+};
+
+// Function to distribute the shuffled cards among the specified number of players
+const dealCards = (cards, numPlayers, numCardsPerPlayer) => {
+  const hands = [];
+  // Loop through the number of players to create an array of hands
+  // Each hand contains an array of cards, spliced from the original cards array
+  for (let i = 0; i < numPlayers; i++) {
+      hands.push(cards.splice(0, numCardsPerPlayer));
     }
-  }
+    return hands;
+  };
   
-  //define shuffle function pass deck as the argumen
-  function shuffle(deck) {
-  // Loop through the deck starting from the end
-  for (let i = deck.length - 1; i > 0; i--) {
-    // Generate a random index between 0 and i
-    let j = Math.floor(Math.random() * (i + 1));
-    // Swap the current element with the randomly selected element
-    [deck[i], deck[j]] = [deck[j], deck[i]];
-  }
-  // Return the shuffled array
-  return deck;
-}
-  function play(player1Hand, player2Hand) {
-    // function to play the game
-    while (!winner) {
-      // continue looping until a winner is found
-      console.log(`Player ${currentPlayer}'s turn`); // notify the current player's turn
-      console.log(`Current card on top of the draw pile: ${currentCard.color} ${currentCard.value}`); // show the current card on the draw pile
-      console.log(`Player 1 hand: ${player1Hand}`); // show player 1's hand
-      console.log(`Player 2 hand: ${player2Hand}`); // show player 2's hand
+  // Call the dealCards function to distribute the shuffled cards among 2 players, 7 cards per player
+  const hands = dealCards(cards, 2, 7);
   
-      if (currentPlayer === 1 && player1Hand.length === 0) {
-        // if it is player 1's turn and they have no cards in their hand
-        player1Hand.push(drawPile.shift()); // draw a card from the draw pile
-        console.log(`Player 1 draws a card`); // notify player 1 that they have drawn a card
-      } 
-      // If the current player is player 2 and their hand is empty, draw a card for player 2
-      else if (currentPlayer === 2 && player2Hand.length === 0) {
-        player2Hand.push(drawPile.shift());
-        console.log("Player 2 draws a card");// notify player 2 that they have drawn a card
-      }
-      // If the draw pile is empty, shuffle the discard pile to become the draw pile
-      if (drawPile.length === 0) {
-        console.log("Draw pile is empty, shuffling the discard pile");
-        drawPile = shuffle(discardPile);
-        discardPile = [];
-      }
-      // If the current player is player 1, call playerTurn function for player 1
-      if (currentPlayer === 1) {
-        playerTurn(currentPlayer, player1Hand);
-      // If the current player is player 2, call playerTurn function for player 2
-      } else {
-        playerTurn(currentPlayer, player2Hand);
-      }
-      // Check if player 1 has an empty hand, if so, player 1 wins the game
-      if (player1Hand.length === 0) {
-        winner = 1;
-        console.log(`Player ${winner} has won the game!`);
-        return;
-      // Check if player 2 has an empty hand, if so, player 2 wins the game
-      } else if (player2Hand.length === 0) {
-        winner = 2;
-        console.log(`Player ${winner} has won the game!`);
-        return;
-      } 
-      // If both player hands are not empty and the draw pile is empty, the game is a draw
-      else if (drawPile.length === 0) {
-        if (player1Hand.length < player2Hand.length) {
-          winner = 1;
-        } else if (player2Hand.length < player1Hand.length) {
-          winner = 2;
-        } else {
-          console.log("The game is a draw!");
-        }
-      }}}
+  // Add the cards in hand to each player's hand in the DOM
+  addCardsToHand(player1Hand, hands[0]);
+  addCardsToHand(player2Hand, hands[1]);
+  
+  // Add the remaining cards to the draw pile in the DOM
+  drawPile.appendChild(createCardElement(null, cards.length));
+  
+  // Add the first card in player 1's hand to the discard pile in the DOM
+  discardPile.appendChild(createCardElement(hands[0][0].color, hands[0][0].number));
