@@ -1,49 +1,117 @@
+//assign global variables
 const unoGame = document.querySelector('.uno-game');
-const player1Hand = document.querySelector('.player-1-hand');
-const player2Hand = document.querySelector('.player-2-hand');
+const player1Hand = document.querySelector('.player-1');
+const player2Hand = document.querySelector('.player-2');
 const drawPile = document.querySelector('.draw-pile');
 const discardPile = document.querySelector('.discard-pile');
 const callUnoButton = document.createElement('button');
-callUnoButton.innerHTML = 'Call UNO';
+//Create uno Button
+callUnoButton.textContent = "Call UNO";
 unoGame.appendChild(callUnoButton);
+// initiliaze changing variables
+let currentPlayer = 1;
+let clockwise = true;
+let cardsLeftCounter = 0;
+let timerId;
+
+const updateCurrentPlayerDisplay = () => {
+  // update the display of the current player
+  const currentPlayerDisplay = document.querySelector(`.player-1`);
+  currentPlayerDisplay.classList.add("active");
+  const otherPlayerDisplay = document.querySelector(`.player-2`);
+  otherPlayerDisplay.classList.remove("active");
+};
+
+const checkForWin = () => {
+  // check if any of the players has won the game
+  const player1Cards = Array.from(player1Hand.children);
+  const player2Cards = Array.from(player2Hand.children);
+  if (player1Cards.length === 0) {
+    return 1;
+  } else if (player2Cards.length === 0) {
+    return 2;
+  } else {
+    return 0;
+  }
+};
+
+const drawCard = (player, amount) => {
+  let drawPileCards = Array.from(drawPile.children);
+  const hand = player === 1 ? player1Hand : player2Hand;
+  for (let i = 0; i < amount; i++) {
+    if (drawPileCards.length === 0) {
+      shuffleDiscardPile();
+      drawPileCards = Array.from(drawPile.children);
+    }
+    const card = drawPileCards.pop();
+    hand.appendChild(card);
+  }
+};
+
+const updateDiscardPile = (color, number) => {
+  // update the top card of the discard pile
+  const topDiscard = discardPile.lastChild;
+  topDiscard.classList.add(color);
+  topDiscard.innerHTML = number;
+};
+
+const switchPlayer = () => {
+  // switch the turn to the next player
+  currentPlayer = currentPlayer === 1 ? 2 : 1;
+};
+
+const startTimer = () => {
+  // start the turn timer
+  timerId = setTimeout(endTurn, 5000);
+};
+
+const endTurn = () => {
+  // end the turn
+  clearTimeout(timerId);
+  switchPlayer();
+  startTimer();
+};
 
 // Select the UNO game container and hands of the two players and the draw and discard piles
 
 const createCardElement = (color, number) => {
-  const cardElement = document.createElement('div');
-  cardElement.classList.add('card');
+  const cardElements = document.createElement('div');
+  cardElements.classList.add('card');
 
   // Create the card element and add class 'card' to it
 
   if (color) {
-    cardElement.classList.add(color);
+    cardElements.classList.add(color);
   }
 
   // Add class for color if there's a color passed as argument
 
-  cardElement.innerHTML = number;
+  cardElements.innerHTML = number;
 
   // Set the card number as the content of the card element
 
-  cardElement.onclick = () => {
-    if (currentPlayer === 1) {
-      if (player1Hand.contains(cardElement)) {
-        discardPile.appendChild(cardElement);
-        player1Hand.removeChild(cardElement);
-        currentPlayer = 2;
+  for (let i = 0; i < cardElements.length; i++) {
+    cardElements[i].onclick = () => {
+      let playerHand
+      let otherPlayerHand;
+      if (currentPlayer === 1) {
+        playerHand = player1Hand;
+        otherPlayerHand = player2Hand;
+      } else {
+        playerHand = player2Hand;
+        otherPlayerHand = player1Hand;
       }
-    } else {
-      if (player2Hand.contains(cardElement)) {
-        discardPile.appendChild(cardElement);
-        player2Hand.removeChild(cardElement);
-        currentPlayer = 1;
+      if (playerHand.contains(cardElements[i])) {
+        discardPile.appendChild(cardElements[i]);
+        playerHand.remove(cardElements[i]);
+        currentPlayer = (currentPlayer === 1) ? 2 : 1;
       }
-    }
-  };
-
+    };
+  }  
+  
   // Add a click event listener that appends the card to the discard pile and removes it from player 1's hand
 
-  return cardElement;
+  return cardElements;
 };
 // Function to create and return a card element
 
@@ -149,8 +217,6 @@ const dealCards = (cards, numPlayers, numCardsPerPlayer) => {
   discardPile.appendChild(createCardElement(hands[0][0].color, hands[0][0].number));
 
   //Keep track of the current player and the top card on the discard pile
-
-   let currentPlayer = 1;
    let topCard = hands[0][0];
 
 //Create a function to handle player turns
@@ -204,3 +270,53 @@ unoGame.appendChild(skipButton);
 
 //Start the game
 playerTurn(hands[0]);
+
+const shuffleDiscardPile = () => {
+  // shuffle the cards in the discard pile and place them in the draw pile
+  const discardPileCards = Array.from(discardPile.children);
+  while (discardPileCards.length > 0) {
+  const randomIndex = Math.floor(Math.random() * discardPileCards.length);
+  const card = discardPileCards[randomIndex];
+  drawPile.appendChild(card);
+  discardPileCards.splice(randomIndex, 1);
+  }
+  };
+  
+  const playCard = (player, cardElement) => {
+  // play the card and update the discard pile
+  const [color, number] = cardElement.classList;
+  updateDiscardPile(color, number);
+  cardElement.remove();
+  };
+  
+  const unoCallHandler = () => {
+  // handle the uno call
+  alert("UNO!");
+  };
+  
+  callUnoButton.addEventListener('click', unoCallHandler);
+  
+  player1Hand.addEventListener('click', (event) => {
+  // handle the player 1 card play
+  if (currentPlayer === 1) {
+  const cardElement = event.target;
+  playCard(1, cardElement);
+  endTurn();
+  }
+  });
+  
+  player2Hand.addEventListener('click', (event) => {
+  // handle the player 2 card play
+  if (currentPlayer === 2) {
+  const cardElement = event.target;
+  playCard(2, cardElement);
+  endTurn();
+  }
+  });
+  
+  // start the game
+  updateCurrentPlayerDisplay();
+  drawCard(1, 7);
+  drawCard(2, 7);
+  updateDiscardPile('red', '0');
+  startTimer();
