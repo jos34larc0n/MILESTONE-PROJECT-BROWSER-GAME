@@ -1,29 +1,31 @@
-//assign global variables
 const unoGame = document.querySelector('.uno-game');
-const player1Hand = document.querySelector('.player-1');
-const player2Hand = document.querySelector('.player-2');
+let player1Hand = document.querySelector('.player-1');
+let player2Hand = document.querySelector('.player-2');
 const drawPile = document.querySelector('.draw-pile');
 const discardPile = document.querySelector('.discard-pile');
 const callUnoButton = document.createElement('button');
-//Create uno Button
+const hand = [player1Hand, player2Hand];
+
+// Create uno button
 callUnoButton.textContent = "Call UNO";
 unoGame.appendChild(callUnoButton);
-// initiliaze changing variables
+
+// Initialize changing variables
 let currentPlayer = 1;
 let clockwise = true;
 let cardsLeftCounter = 0;
 let timerId;
 
 const updateCurrentPlayerDisplay = () => {
-  // update the display of the current player
-  const currentPlayerDisplay = document.querySelector(`.player-1`);
+  // Update the display of the current player
+  const currentPlayerDisplay = document.querySelector(`.player-${currentPlayer}`);
   currentPlayerDisplay.classList.add("active");
-  const otherPlayerDisplay = document.querySelector(`.player-2`);
+  const otherPlayerDisplay = document.querySelector(`.player-${currentPlayer === 1 ? 2 : 1}`);
   otherPlayerDisplay.classList.remove("active");
 };
 
 const checkForWin = () => {
-  // check if any of the players has won the game
+  // Check if any of the players has won the game
   const player1Cards = Array.from(player1Hand.children);
   const player2Cards = Array.from(player2Hand.children);
   if (player1Cards.length === 0) {
@@ -35,89 +37,92 @@ const checkForWin = () => {
   }
 };
 
-const drawCard = (player, amount) => {
-  let drawPileCards = Array.from(drawPile.children);
-  const hand = player === 1 ? player1Hand : player2Hand;
-  for (let i = 0; i < amount; i++) {
-    if (drawPileCards.length === 0) {
-      shuffleDiscardPile();
-      drawPileCards = Array.from(drawPile.children);
-    }
-    const card = drawPileCards.pop();
-    hand.appendChild(card);
-  }
-};
-
-const updateDiscardPile = (color, number) => {
-  // update the top card of the discard pile
-  const topDiscard = discardPile.lastChild;
-  topDiscard.classList.add(color);
-  topDiscard.innerHTML = number;
-};
-
 const switchPlayer = () => {
-  // switch the turn to the next player
+  // Switch the turn to the next player
   currentPlayer = currentPlayer === 1 ? 2 : 1;
 };
 
 const startTimer = () => {
-  // start the turn timer
+  // Start the turn timer
   timerId = setTimeout(endTurn, 5000);
 };
 
 const endTurn = () => {
-  // end the turn
+  // End the turn
   clearTimeout(timerId);
   switchPlayer();
   startTimer();
 };
 
-// Select the UNO game container and hands of the two players and the draw and discard piles
-
 const createCardElement = (color, number) => {
-  const cardElements = document.createElement('div');
-  cardElements.classList.add('card');
-
-  // Create the card element and add class 'card' to it
-
-  if (color) {
-    cardElements.classList.add(color);
-  }
-
-  // Add class for color if there's a color passed as argument
-
-  cardElements.innerHTML = number;
-
-  // Set the card number as the content of the card element
-
-  for (let i = 0; i < cardElements.length; i++) {
-    cardElements[i].onclick = () => {
-      let playerHand
-      let otherPlayerHand;
-      if (currentPlayer === 1) {
-        playerHand = player1Hand;
-        otherPlayerHand = player2Hand;
-      } else {
-        playerHand = player2Hand;
-        otherPlayerHand = player1Hand;
-      }
-      if (playerHand.contains(cardElements[i])) {
-        discardPile.appendChild(cardElements[i]);
-        playerHand.remove(cardElements[i]);
-        currentPlayer = (currentPlayer === 1) ? 2 : 1;
-      }
-    };
-  }  
+  const cardElement = document.createElement('div');
+  cardElement.textContent = number;
   
-  // Add a click event listener that appends the card to the discard pile and removes it from player 1's hand
+  // Create a class for each color
+  if (color === 'yellow') {
+    cardElement.classList.add('yellow');
+  } 
+  if (color === 'red') {
+    cardElement.classList.add('red');
+  } 
+  if (color === 'blue') {
+    cardElement.classList.add('blue');
+  } 
+  if (color === 'green') {
+    cardElement.classList.add('green');
+  } 
+  if (color === 'black') {
+    cardElement.classList.add('black');
+  } 
+      
+  // Set the card number as the content of the card element
+  cardElement.onclick = () => {
+    let playerHand
+    let otherPlayerHand;
+    if (currentPlayer === 1) {
+      playerHand = player1Hand;
+      otherPlayerHand = player2Hand;
+    } else {
+      playerHand = player2Hand;
+      otherPlayerHand = player1Hand;
+    }
+    if (playerHand.contains(cardElement)) {
+      discardPile.appendChild(cardElement);
+      playerHand.remove(cardElement);
+      currentPlayer = (currentPlayer === 1) ? 2 : 1;
+    }
+  };
 
-  return cardElements;
+  return cardElement;
 };
-// Function to create and return a card element
 
 const addCardsToHand = (hand, cards) => {
-  cards.forEach(card => hand.appendChild(createCardElement(card.color, card.number)));
-};
+  if (hand === "player1Hand") {
+  cards.forEach(card => player1Hand.appendChild(createCardElement(card.color, card.number)));
+  } else if (hand === "player2Hand") {
+  cards.forEach(card => player2Hand.appendChild(createCardElement(card.color, card.number)));
+  }
+  };
+
+
+// Draw a card from the draw pile and add it to the player's hand
+for (let i = 0; i < 7; i++) {
+  if (drawPile.children.length > 0) {
+  const card = drawPile.children[0];
+  drawPile.removeChild(card);
+  hand[i].appendChild(card);
+  } else {
+  break;
+  }
+  };
+  
+  drawPile.addEventListener('click', () => {
+  if (currentPlayer === 1) {
+  drawCard(player1Hand, 1);
+  } else if (currentPlayer === 2) {
+  drawCard(player2Hand, 1);
+  }
+  });
 
 //Add Event Listener for Call Uno Button
 
@@ -209,14 +214,13 @@ const dealCards = (cards, numPlayers, numCardsPerPlayer) => {
   addCardsToHand(player2Hand, hands[1]);
   
   // Add the remaining cards to the draw pile in the DOM
-
-  drawPile.appendChild(createCardElement(null, cards.length));
-  
-  // Add the first card in player 1's hand to the discard pile in the DOM
-
-  discardPile.appendChild(createCardElement(hands[0][0].color, hands[0][0].number));
-
-  //Keep track of the current player and the top card on the discard pile
+  const addRemainingCardsToDrawPile = (drawPile, remainPile) => {
+    for (let i = 0; i < drawPile.length; i++) {
+      let remainPile = hands.slice;
+      drawPile.appendChild(remainPile[i]);
+    }
+    };
+    //Keep track of the current player and the top card on the discard pile
    let topCard = hands[0][0];
 
 //Create a function to handle player turns
@@ -281,6 +285,29 @@ const shuffleDiscardPile = () => {
   discardPileCards.splice(randomIndex, 1);
   }
   };
+
+  for (let i = 0; i < drawPile.length; i++) {
+  let drawPileCards = drawPile[i].children;
+  if (drawPileCards.length === 0) {
+    shuffleDiscardPile();
+  }
+  const cardObject = drawPileCards[drawPileCards.length - 1];
+  drawPileCards.removeChild(cardObject);
+  const cardNode = document.createElement("div");
+  cardNode.innerHTML = cardObject.innerHTML;
+  hand.appendChild(cardNode);
+}
+const updateDiscardPile = (color, number) => {
+  // update the top card of the discard pile
+  let topDiscard = discardPile.lastChild;
+  if (!topDiscard) {
+    topDiscard = document.createElement("div");
+    discardPile.appendChild(topDiscard);
+  }
+  topDiscard.classList.add(color);
+  topDiscard.innerHTML = number;
+};
+
   
   const playCard = (player, cardElement) => {
   // play the card and update the discard pile
@@ -293,26 +320,38 @@ const shuffleDiscardPile = () => {
   // handle the uno call
   alert("UNO!");
   };
+  const drawCard = (player, amount) => {
+    const hand = player === 1 ? player1Hand : player2Hand;
+    for (let i = 0; amount < 1; i++) {
+      let drawPileCards = [drawPile[i].children]
+      if (drawPileCards.length === 0) {
+        shuffleDiscardPile();
+        drawPileCards = Array.from(drawPile.children);
+      }
+      const card = drawPileCards.pop();
+      hand.appendChild(card);
+    }
+  };
   
-  callUnoButton.addEventListener('click', unoCallHandler);
-  
-  player1Hand.addEventListener('click', (event) => {
-  // handle the player 1 card play
-  if (currentPlayer === 1) {
-  const cardElement = event.target;
-  playCard(1, cardElement);
-  endTurn();
-  }
-  });
-  
-  player2Hand.addEventListener('click', (event) => {
-  // handle the player 2 card play
-  if (currentPlayer === 2) {
-  const cardElement = event.target;
-  playCard(2, cardElement);
-  endTurn();
-  }
-  });
+  callUnoButton.addEventListener('click', () => {
+    if (currentPlayer === 1 && player1Hand.children.length === 1) {
+    currentPlayer = 2;
+    updateCurrentPlayerDisplay();
+    drawCard(player2Hand, 2);
+    } else if (currentPlayer === 2 && player2Hand.children.length === 1) {
+    currentPlayer = 1;
+    updateCurrentPlayerDisplay();
+    drawCard(player1Hand, 2);
+    } else {
+    if (currentPlayer === 1) {
+    drawCard(player1Hand, 2);
+    } else {
+    drawCard(player2Hand, 2);
+    }
+    }
+    });
+
+
   
   // start the game
   updateCurrentPlayerDisplay();
@@ -320,3 +359,67 @@ const shuffleDiscardPile = () => {
   drawCard(2, 7);
   updateDiscardPile('red', '0');
   startTimer();
+
+  
+// Function to handle the game logic
+function play() {
+  while (!winner) {
+    console.log(`Player ${currentPlayer}'s turn`);
+    console.log(`Current card on top of the draw pile: ${currentCard.color} ${currentCard.value}`);
+    console.log(`Player 1 hand: ${player1Hand}`);
+    console.log(`Player 2 hand: ${player2Hand}`);
+
+    // If the current player has no cards in their hand, draw a card from the draw pile
+    if (currentPlayer === 1 && player1Hand.length === 0) {
+      player1Hand.push(drawPile.shift());
+      console.log(`Player 1 draws a card`);
+    } else if (currentPlayer === 2 && player2Hand.length === 0) {
+      player2Hand.push(drawPile.shift());
+      console.log(`Player 2 draws a card`);
+    }
+
+    // If the draw pile is empty, shuffle the discard pile to form a new draw pile
+    if (drawPile.length === 0) {
+      console.log("Draw pile is empty, shuffling the discard pile");
+      drawPile = shuffle(discardPile);
+      discardPile = [];
+    }
+
+    // Call the playerTurn function to handle the current player's turn
+    if (currentPlayer === 1) {
+      playerTurn(currentPlayer, player1Hand);
+    } else {
+      playerTurn(currentPlayer, player2Hand);
+    }
+
+    // Check if the current player has won the game
+    if (player1Hand.length === 0) {
+      winner = 1;console.log(`Player ${winner} has won the game!`);
+      return;
+      }
+      // Check if Player 2 has won the game
+      else if (player2Hand.length === 0) {
+      winner = 2;
+      console.log(`Player ${winner} has won the game!`);
+      return;
+      }
+      // Check if the draw pile is empty
+      else if (drawPile.length === 0) {
+      // Find the player with the lower hand count
+      if (player1Hand.length < player2Hand.length) {
+      winner = 1;
+      } else if (player2Hand.length < player1Hand.length) {
+      winner = 2;
+      } else {
+      console.log("The game is a draw!");
+      return;
+      }
+      console.log(`Player ${winner} has won the game with the lower hand count!`);
+      return;
+      }
+      
+      // Switch players
+      currentPlayer = (currentPlayer === 1) ? 2 : 1;
+      
+      // Call the playerTurn function again
+      gameLogic(player1Hand, player2Hand);}}
